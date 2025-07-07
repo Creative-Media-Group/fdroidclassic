@@ -69,7 +69,7 @@ def privilegedExtensionApplicationIdFallback2 = '"org.fdroid.fdroid.privileged.r
 
 
 android {
-    compileSdkVersion 33
+    compileSdk 35
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
