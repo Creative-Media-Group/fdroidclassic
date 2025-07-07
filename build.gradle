@@ -4,7 +4,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.8.2'
+        classpath 'com.android.tools.build:gradle:8.9.3'
         classpath 'com.github.bjoernq:unmockplugin:0.7.8'
     }
 }
