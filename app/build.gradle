@@ -86,7 +86,7 @@ android {
                     'proguard-android-optimize.txt'),
                     'proguard-rules.pro'
         }
-        all {
+        configureEach {
             buildConfigField "String", "PRIVILEGED_EXTENSION_PACKAGE_NAME", privilegedExtensionApplicationId
             buildConfigField "String", "PRIVILEGED_EXTENSION_PACKAGE_NAME_FALLBACK1", privilegedExtensionApplicationIdFallback1
             buildConfigField "String", "PRIVILEGED_EXTENSION_PACKAGE_NAME_FALLBACK2", privilegedExtensionApplicationIdFallback2

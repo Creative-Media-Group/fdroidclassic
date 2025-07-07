@@ -14,7 +14,7 @@ Releases will also be available there a couple of days before they make it into 
 
 If you need to re-add the repository: https://bubu1.eu/fdroidclassic/fdroid/repo?fingerprint=5187CFD99F084FFAB2AD60D9D10B39203B89A46DD4862397FE1B1A4F3D46627A
 
-<img src="screenshots/repo-qr.png" width="300">
+<img src="screenshots/repo-qr.png" width="530" alt="">
 
 ### Project description
 
@@ -24,9 +24,9 @@ Lots of information that was provided clearly in the old UI is now not available
 
 This project is probably aimed more at the power user who values function over form. Or people who absolutely cannot stand the tile-based new UI.
 
-<img src="metadata/en-US/images/phoneScreenshots/1.png" width="250">
-<img src="metadata/en-US/images/phoneScreenshots/2.png" width="250">
-<img src="metadata/en-US/images/phoneScreenshots/3.png" width="250">
+<img src="metadata/en-US/images/phoneScreenshots/1.png" width="1080" alt="">
+<img src="metadata/en-US/images/phoneScreenshots/2.png" width="1080" alt="">
+<img src="metadata/en-US/images/phoneScreenshots/3.png" width="1080" alt="">
 
 ## Status
 
