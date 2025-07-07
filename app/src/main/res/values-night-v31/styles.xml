@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppThemeLight" parent="AppBaseThemeLight">
+        <item name="android:windowSplashScreenBackground">@color/fdroid_night</item>
+    </style>
+</resources>
