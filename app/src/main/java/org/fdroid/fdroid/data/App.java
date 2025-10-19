@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.hash.Hashing;
 
+import org.fdroid.fdroid.IndexV1Updater;
 import org.fdroid.fdroid.Utils;
 import org.fdroid.fdroid.data.Schema.AppMetadataTable.Cols;
 import org.xmlpull.v1.XmlPullParser;
@@ -41,12 +42,14 @@ import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -66,7 +69,7 @@ import java.util.regex.Pattern;
  * <b>NOTE:</b>If an instance variable is only meant for internal state, and not for
  * representing data coming from the server, then it must also be decorated with
  * {@code @JsonIgnore} to prevent abuse!  The tests for
- * {@link org.fdroid.fdroid.IndexV1Updater} will also have to be updated.
+ * {@link IndexV1Updater} will also have to be updated.
  *
  * @see <a href="https://gitlab.com/fdroid/fdroiddata">fdroiddata</a>
  * @see <a href="https://gitlab.com/fdroid/fdroidserver">fdroidserver</a>
@@ -96,7 +99,7 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
     private AppPrefs prefs;
     @JsonIgnore
     @NonNull
-    public String preferredSigner;
+    public String preferredSigner = "";
     @JsonIgnore
     public boolean isApk;
 
@@ -223,6 +226,7 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
     }
 
     public App() {
+        preferredSigner = "";
     }
 
     public App(final Cursor cursor) {
@@ -392,6 +396,7 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
             throws CertificateEncodingException, IOException, PackageManager.NameNotFoundException {
         App app = new App();
         PackageInfo packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS);
+        assert packageInfo.applicationInfo != null;
         SanitizedFile apkFile = SanitizedFile.knownSanitized(packageInfo.applicationInfo.publicSourceDir);
         app.installedApk = new Apk();
         if (apkFile.canRead()) {
@@ -530,7 +535,7 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
         }
         if (Build.VERSION.SDK_INT >= 24) {
             String[] sortedLocaleList = getLocales().split(",");
-            Arrays.sort(sortedLocaleList, (s1, s2) -> s1.length() - s2.length());
+            Arrays.sort(sortedLocaleList, Comparator.comparingInt(String::length));
             for (String toUse : sortedLocaleList) {
                 localesToUse.add(toUse);
                 for (String l : availableLocales) {
@@ -604,14 +609,14 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
      *
      * @see LocaleList
      * @see Locale#getDefault()
-     * @see java.util.Locale.LanguageRange
+     * @see Locale.LanguageRange
      */
     private String getLocalizedEntry(Map<String, Map<String, Object>> localized,
                                      Set<String> locales, String key) {
         try {
             for (String locale : locales) {
                 if (localized.containsKey(locale)) {
-                    String value = (String) localized.get(locale).get(key);
+                    String value = (String) Objects.requireNonNull(localized.get(locale)).get(key);
                     if (value != null) {
                         return value;
                     }
@@ -630,7 +635,7 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
                 Map<String, Object> entry = localized.get(locale);
                 if (entry != null) {
                     Object value = entry.get(key);
-                    if (value != null && value.toString().length() > 0) {
+                    if (value != null && !value.toString().isEmpty()) {
                         return locale + "/" + value;
                     }
                 }
@@ -646,8 +651,8 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
         try {
             for (String locale : locales) {
                 if (localized.containsKey(locale)) {
-                    ArrayList<String> entry = (ArrayList<String>) localized.get(locale).get(key);
-                    if (entry != null && entry.size() > 0) {
+                    ArrayList<String> entry = (ArrayList<String>) Objects.requireNonNull(localized.get(locale)).get(key);
+                    if (entry != null && !entry.isEmpty()) {
                         String[] result = new String[entry.size()];
                         int i = 0;
                         for (String e : entry) {
@@ -774,6 +779,7 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
         }
 
         ApplicationInfo appInfo = packageInfo.applicationInfo;
+        assert appInfo != null;
         final CharSequence appDescription = appInfo.loadDescription(pm);
         if (TextUtils.isEmpty(appDescription)) {
             this.summary = "(installed by " + installerPackageLabel + ")";
@@ -1222,7 +1228,7 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
         this.flattrID = in.readString();
         this.liberapay = in.readString();
         this.openCollective = in.readString();
-        this.preferredSigner = in.readString();
+        this.preferredSigner = Objects.requireNonNull(in.readString());
         this.upstreamVersionName = in.readString();
         this.upstreamVersionCode = in.readInt();
         this.suggestedVersionName = in.readString();
@@ -1252,7 +1258,7 @@ public class App extends ValueObject implements Comparable<App>, Parcelable {
     }
 
     @JsonIgnore
-    public static final Parcelable.Creator<App> CREATOR = new Parcelable.Creator<App>() {
+    public static final Creator<App> CREATOR = new Creator<>() {
         @Override
         public App createFromParcel(Parcel source) {
             return new App(source);
