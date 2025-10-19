@@ -24,11 +24,7 @@ public class FileCompat {
 
     public static boolean symlink(SanitizedFile source, SanitizedFile dest) {
 
-        if (Build.VERSION.SDK_INT >= 21) {
-            symlinkOs(source, dest);
-        } else {
-            symlinkLibcore(source, dest);
-        }
+        symlinkOs(source, dest);
 
         return dest.exists();
     }
@@ -40,7 +36,6 @@ public class FileCompat {
      */
     private static class Symlink21 {
 
-        @TargetApi(21)
         void symlink(SanitizedFile source, SanitizedFile dest) {
             try {
                 android.system.Os.symlink(source.getAbsolutePath(), dest.getAbsolutePath());
@@ -51,7 +46,6 @@ public class FileCompat {
 
     }
 
-    @TargetApi(21)
     static void symlinkOs(SanitizedFile source, SanitizedFile dest) {
         new Symlink21().symlink(source, dest);
     }
@@ -59,6 +53,7 @@ public class FileCompat {
     static void symlinkLibcore(SanitizedFile source, SanitizedFile dest) {
         try {
             Object os = Class.forName("libcore.io.Libcore").getField("os").get(null);
+            assert os != null;
             Method symlink = os.getClass().getMethod("symlink", String.class, String.class);
             symlink.invoke(os, source.getAbsolutePath(), dest.getAbsolutePath());
         } catch (Exception e) {

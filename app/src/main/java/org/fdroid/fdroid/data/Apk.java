@@ -19,13 +19,16 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import org.fdroid.fdroid.IndexV1Updater;
 import org.fdroid.fdroid.Utils;
 import org.fdroid.fdroid.data.Schema.ApkTable.Cols;
+import org.fdroid.fdroid.installer.InstallManagerService;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.regex.Pattern;
 /**
  * Represents a single package of an application. This represents one particular
@@ -40,7 +43,7 @@ import java.util.regex.Pattern;
  * <b>NOTE:</b>If an instance variable is only meant for internal state, and not for
  * representing data coming from the server, then it must also be decorated with
  * {@code @JsonIgnore} to prevent abuse!  The tests for
- * {@link org.fdroid.fdroid.IndexV1Updater} will also have to be updated.
+ * {@link IndexV1Updater} will also have to be updated.
  *
  * @see <a href="https://gitlab.com/fdroid/fdroiddata">fdroiddata</a>
  * @see <a href="https://gitlab.com/fdroid/fdroidserver">fdroidserver</a>
@@ -85,7 +88,7 @@ public class Apk extends ValueObject implements Comparable<Apk>, Parcelable {
     public Date added;
     /**
      * The array of the names of the permissions that this APK requests. This is the
-     * same data as {@link android.content.pm.PackageInfo#requestedPermissions}. Note this
+     * same data as {@link PackageInfo#requestedPermissions}. Note this
      * does not mean that all these permissions have been granted, only requested.  For
      * example, a regular app can request a system permission, but it won't be granted it.
      */
@@ -119,6 +122,7 @@ public class Apk extends ValueObject implements Comparable<Apk>, Parcelable {
     public long appId;
 
     public Apk() {
+        hash = "";
     }
 
     /**
@@ -272,7 +276,7 @@ public class Apk extends ValueObject implements Comparable<Apk>, Parcelable {
      * is guaranteed to uniquely represent this file since it points to a file
      * on the file system of the canonical webserver.
      *
-     * @see org.fdroid.fdroid.installer.InstallManagerService
+     * @see InstallManagerService
      */
     @JsonIgnore  // prevent tests from failing due to nulls in checkRepoAddress()
     public String getCanonicalUrl() {
@@ -419,7 +423,7 @@ public class Apk extends ValueObject implements Comparable<Apk>, Parcelable {
         this.versionCode = in.readInt();
         this.size = in.readInt();
         this.repoId = in.readLong();
-        this.hash = in.readString();
+        this.hash = Objects.requireNonNull(in.readString());
         this.hashType = in.readString();
         this.minSdkVersion = in.readInt();
         this.targetSdkVersion = in.readInt();
@@ -445,7 +449,7 @@ public class Apk extends ValueObject implements Comparable<Apk>, Parcelable {
         this.appId = in.readLong();
     }
 
-    public static final Parcelable.Creator<Apk> CREATOR = new Parcelable.Creator<Apk>() {
+    public static final Creator<Apk> CREATOR = new Creator<>() {
         @Override
         public Apk createFromParcel(Parcel source) {
             return new Apk(source);
@@ -484,7 +488,7 @@ public class Apk extends ValueObject implements Comparable<Apk>, Parcelable {
             for (String permission : array) {
                 requestedPermissionsSet.add(fdroidToAndroidPermission(permission));
             }
-            return requestedPermissionsSet.toArray(new String[requestedPermissionsSet.size()]);
+            return requestedPermissionsSet.toArray(new String[0]);
         }
         return null;
     }
@@ -565,13 +569,13 @@ public class Apk extends ValueObject implements Comparable<Apk>, Parcelable {
             }
         }
 
-        requestedPermissions = set.toArray(new String[set.size()]);
+        requestedPermissions = set.toArray(new String[0]);
     }
 
 
     /**
      * Get the install path for a "non-apk" media file
-     * Defaults to {@link android.os.Environment#DIRECTORY_DOWNLOADS}
+     * Defaults to {@link Environment#DIRECTORY_DOWNLOADS}
      *
      * @return the install path for this {@link Apk}
      */
@@ -584,7 +588,7 @@ public class Apk extends ValueObject implements Comparable<Apk>, Parcelable {
         MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
         String[] mimeType;
         try {
-            mimeType = mimeTypeMap.getMimeTypeFromExtension(fileExtension).split("/");
+            mimeType = Objects.requireNonNull(mimeTypeMap.getMimeTypeFromExtension(fileExtension)).split("/");
         } catch (NullPointerException e){
             mimeType = new String[]{};
         }
